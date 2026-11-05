@@ -101,6 +101,7 @@ return [
             Attribute::boolean(key: 'providerSilentMode', default: false),
             Attribute::boolean(key: 'logging', required: true),
             Attribute::string(key: 'runtime', size: 2048),
+            Attribute::string(key: 'framework', size: 2048, default: ''),
             Attribute::integer(key: 'deploymentRetention', default: 0),
             Attribute::string(key: 'deploymentInternalId'),
             Attribute::string(key: 'deploymentId'),

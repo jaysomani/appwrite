@@ -127,6 +127,7 @@ class Create extends Base
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule.', true)
             ->param('description', '', new Text(1024, 0), 'Optional description for the function.', true)
+            ->param('framework', '', new WhiteList(['', ...\array_keys(Config::getParam('functionFrameworks'))], true), 'Function framework. Leave empty to use the Appwrite function syntax.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
@@ -180,6 +181,7 @@ class Create extends Base
         int $deploymentRetention,
         int $interval,
         string $description,
+        string $framework,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -244,6 +246,8 @@ class Create extends Base
 
         $functionId = ($functionId == 'unique()') ? Id::unique() : $functionId;
 
+        $this->validateFunctionFramework($framework, $runtime);
+
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
         if (!empty($allowList) && !\in_array($runtime, $allowList)) {
@@ -279,6 +283,7 @@ class Create extends Base
                 'name' => $name,
                 'description' => $description,
                 'runtime' => $runtime,
+                'framework' => $framework,
                 'deploymentRetention' => $deploymentRetention,
                 'deploymentInternalId' => '',
                 'deploymentId' => '',

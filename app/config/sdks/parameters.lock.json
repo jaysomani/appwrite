@@ -2028,7 +2028,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "framework"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2129,6 +2130,9 @@
             "queries",
             "total"
         ],
+        "functions.listFrameworks": [
+            "total"
+        ],
         "functions.listRuntimes": [
             "total"
         ],
@@ -2172,7 +2176,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "framework"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -6232,7 +6237,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "framework"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6330,6 +6336,9 @@
             "queries",
             "total"
         ],
+        "functions.listFrameworks": [
+            "total"
+        ],
         "functions.listRuntimes": [
             "total"
         ],
@@ -6366,7 +6375,8 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "framework"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",

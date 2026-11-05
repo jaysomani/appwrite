@@ -112,6 +112,7 @@ class Update extends Base
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
+            ->param('framework', null, new Nullable(new WhiteList(['', ...\array_keys(Config::getParam('functionFrameworks'))], true)), 'Function framework. Leave empty to use the Appwrite function syntax.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -156,6 +157,7 @@ class Update extends Base
         int $deploymentRetention,
         ?int $interval,
         ?string $description,
+        ?string $framework,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -207,6 +209,14 @@ class Update extends Base
         }
 
         $description ??= $function->getAttribute('description', '');
+        $framework ??= $function->getAttribute('framework', '');
+
+        if ($framework !== '' && $function->getAttribute('version', 'v2') === 'v2') {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Frameworks are not supported on functions using the v2 runtime.');
+        }
+
+        $this->validateFunctionFramework($framework, $runtime);
+
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
         $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
@@ -313,7 +323,8 @@ class Update extends Base
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
             $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
-            $function->getAttribute('runtime') !== $runtime
+            $function->getAttribute('runtime') !== $runtime ||
+            $function->getAttribute('framework', '') !== $framework
         ) {
             $live = false;
         }
@@ -345,6 +356,7 @@ class Update extends Base
             'name' => $name,
             'description' => $description,
             'runtime' => $runtime,
+            'framework' => $framework,
             'events' => $events,
             'schedule' => $schedule,
             'interval' => $interval,

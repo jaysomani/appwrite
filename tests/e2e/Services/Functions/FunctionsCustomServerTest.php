@@ -3302,6 +3302,110 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($runtimes['body']['runtimes']);
     }
 
+    public function testListFrameworks(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', $headers);
+
+        $this->assertSame(200, $frameworks['headers']['status-code']);
+        $this->assertCount($frameworks['body']['total'], $frameworks['body']['frameworks']);
+
+        $keys = \array_column($frameworks['body']['frameworks'], 'key');
+        $this->assertContains('express', $keys);
+
+        $express = $frameworks['body']['frameworks'][\array_search('express', $keys, true)];
+        $this->assertSame('Express', $express['name']);
+        $this->assertContains('node-22', $express['runtimes']);
+        $this->assertNotContains('node-16.0', $express['runtimes']);
+        $this->assertArrayNotHasKey('startCommand', $express);
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', $headers, ['total' => false]);
+
+        $this->assertSame(200, $frameworks['headers']['status-code']);
+        $this->assertSame(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+    }
+
+    public function testFunctionFramework(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Express',
+            'runtime' => 'node-22',
+            'entrypoint' => 'server.js',
+            'framework' => 'express',
+        ]);
+
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertSame('express', $function['body']['framework']);
+
+        $functionId = $function['body']['$id'];
+
+        // Clients that predate the framework param must not clear it
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Renamed',
+            'entrypoint' => 'server.js',
+        ]);
+
+        $this->assertSame(200, $function['headers']['status-code']);
+        $this->assertSame('express', $function['body']['framework']);
+
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Renamed',
+            'entrypoint' => 'server.js',
+            'framework' => '',
+        ]);
+
+        $this->assertSame(200, $function['headers']['status-code']);
+        $this->assertSame('', $function['body']['framework']);
+
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Renamed',
+            'entrypoint' => 'server.js',
+            'framework' => 'unknown',
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Renamed',
+            'runtime' => 'php-8.3',
+            'entrypoint' => 'index.php',
+            'framework' => 'express',
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Express',
+            'runtime' => 'php-8.3',
+            'entrypoint' => 'index.php',
+            'framework' => 'express',
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testListRuntimesAndSpecificationsTotal(): void
     {
         $headers = [

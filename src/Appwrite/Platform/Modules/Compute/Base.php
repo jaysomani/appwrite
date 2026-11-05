@@ -33,6 +33,22 @@ class Base extends Action
     use AppwritePermission;
 
     /**
+     * Reject a function framework that does not run on the chosen runtime.
+     */
+    protected function validateFunctionFramework(string $framework, string $runtime): void
+    {
+        if ($framework === '') {
+            return;
+        }
+
+        $config = Config::getParam('functionFrameworks')[$framework];
+
+        if (!\in_array($runtime, $config['runtimes'], true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $runtime . '" is not supported by framework "' . $config['name'] . '".');
+        }
+    }
+
+    /**
      * Get default specification based on plan and available specifications.
      *
      * @param array $plan The billing plan configuration

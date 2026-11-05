@@ -71,6 +71,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
+            ->addRule('framework', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function framework. Empty when the function uses the Appwrite function syntax.',
+                'default' => '',
+                'example' => 'express',
+            ])
             ->addRule('deploymentRetention', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'How many days to keep the non-active deployments before they will be automatically deleted.',

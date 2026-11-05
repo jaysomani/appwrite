@@ -22,6 +22,7 @@ use Appwrite\Platform\Modules\Functions\Http\Functions\Get as GetFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Update as UpdateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\XList as ListFunctions;
 use Appwrite\Platform\Modules\Functions\Http\Jobs\Event\Create as CreateJobEvent;
+use Appwrite\Platform\Modules\Functions\Http\Frameworks\XList as ListFrameworks;
 use Appwrite\Platform\Modules\Functions\Http\Runtimes\XList as ListRuntimes;
 use Appwrite\Platform\Modules\Functions\Http\Specifications\XList as ListSpecifications;
 use Appwrite\Platform\Modules\Functions\Http\Templates\Get as GetTemplate;
@@ -48,6 +49,9 @@ class Http extends Service
 
         // Runtimes
         $this->addAction('listRuntimes', ListRuntimes::class);
+
+        // Frameworks
+        $this->addAction('listFrameworks', ListFrameworks::class);
 
         // Specifications
         $this->addAction('listSpecifications', ListSpecifications::class);

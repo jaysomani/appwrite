@@ -52,6 +52,57 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('npm install', Deployments::command($resource, $deployment));
     }
 
+    public function testFunctionDefaultStartCommandUsesFramework(): void
+    {
+        Config::setParam('functionFrameworks', [
+            'express' => ['startCommand' => 'bash helpers/express/server.sh'],
+        ]);
+
+        $this->assertSame(
+            'bash helpers/express/server.sh',
+            Deployments::defaultStartCommand(
+                new Document(['$collection' => 'functions', 'framework' => 'express']),
+                new Document(),
+                ['startCommand' => 'bash helpers/server.sh']
+            )
+        );
+    }
+
+    public function testFunctionDefaultStartCommandWithoutFrameworkUsesRuntime(): void
+    {
+        $this->assertSame(
+            'bash helpers/server.sh',
+            Deployments::defaultStartCommand(
+                new Document(['$collection' => 'functions', 'framework' => '']),
+                new Document(),
+                ['startCommand' => 'bash helpers/server.sh']
+            )
+        );
+    }
+
+    public function testSiteDefaultStartCommandUsesAdapter(): void
+    {
+        Config::setParam('frameworks', [
+            'nuxt' => [
+                'adapters' => [
+                    'ssr' => ['startCommand' => 'bash helpers/nuxt/server.sh'],
+                ],
+            ],
+        ]);
+
+        $resource = new Document(['$collection' => 'sites', 'framework' => 'nuxt']);
+        $runtime = ['startCommand' => 'bash helpers/server.sh'];
+
+        $this->assertSame(
+            'bash helpers/nuxt/server.sh',
+            Deployments::defaultStartCommand($resource, new Document(['adapter' => 'ssr']), $runtime)
+        );
+        $this->assertSame(
+            'bash helpers/server.sh',
+            Deployments::defaultStartCommand($resource, new Document(['adapter' => 'static']), $runtime)
+        );
+    }
+
     public function testEmptyStartCommandUsesDefault(): void
     {
         $this->assertSame(
